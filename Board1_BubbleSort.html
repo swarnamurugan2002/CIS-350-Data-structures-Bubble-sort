@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Board 1 — Bubble Sort</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233A; --acc:#0B6BCB; --acc-lt:#EAF1F6; --new:#D98F2B; --new-lt:#FBEBD3;
+    --green:#1F7A3D; --green-lt:#DCEFE1; --purple:#6B3FA0; --purple-lt:#F1E8FB; --grey:#595959;
+    --pill:#D9E8F5; --pill-border:#AFC9E3; --card-border:#D5D5D5; --shaded:#F2F2F2;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; }
+  body{ display:flex; flex-direction:column; font-family:'Kalam', cursive; color:var(--ink);
+    background-color:#fffdf8; background-image: radial-gradient(#d9d9d9 1px, transparent 1px); background-size:18px 18px; }
+
+  header.topbar{ padding:10px 20px; border-bottom:2.5px solid var(--acc); background:#fff; flex-shrink:0; }
+  header.topbar h1{ font-family:'Architects Daughter', cursive; font-size:20px; margin:0; text-align:center; }
+  header.topbar p{ text-align:center; margin:2px 0 0 0; color:var(--grey); font-size:12.5px; }
+  .app-shell{ display:flex; flex:1; min-height:0; }
+  .rail{ width:250px; flex-shrink:0; border-right:2.5px solid var(--acc); background:#fff; overflow-y:auto; padding:10px 0 70px 0; }
+  .rail-item{ padding:10px 16px; font-size:13px; cursor:pointer; border-left:4px solid transparent; color:var(--grey); line-height:1.3; }
+  .rail-item .n{ font-weight:700; color:var(--acc); margin-right:4px; }
+  .rail-item:hover{ background:var(--acc-lt); }
+  .rail-item.active{ border-left-color:var(--acc); color:var(--ink); font-weight:700; background:var(--acc-lt); }
+  .stage{ flex:1; overflow-y:auto; padding:26px 34px 90px 34px; }
+  .slide{ display:none; max-width:1000px; margin:0 auto; }
+  .slide.active{ display:block; animation:fadein .18s ease-out; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .navbar{ position:fixed; left:250px; right:0; bottom:0; background:#fff; border-top:2.5px solid var(--acc); padding:9px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 -2px 8px rgba(0,0,0,.05); }
+  .nav-btn{ font-family:'Kalam', cursive; font-weight:700; font-size:14px; border:2px solid var(--acc); background:#fff; color:var(--acc); border-radius:20px; padding:7px 18px; cursor:pointer; }
+  .nav-btn:disabled{ opacity:.3; cursor:default; }
+  .nav-btn.primary{ background:var(--acc); color:#fff; }
+  .step-indicator{ font-size:13px; color:var(--grey); }
+  .slide-title{ font-family:'Architects Daughter', cursive; font-size:25px; margin:0 0 3px 0; color:var(--ink); }
+  .slide-sub{ color:var(--grey); font-size:14px; margin:0 0 16px 0; }
+
+  .grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:18px; margin-bottom:18px; }
+  .panel{ border:2px solid #7fb3e0; border-radius:14px; background:#fff; padding:12px 14px 14px 14px; }
+  .panel-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .num{ width:26px; height:26px; border-radius:50%; border:2px solid var(--acc); color:var(--acc); display:flex; align-items:center; justify-content:center; font-family:'Architects Daughter', cursive; font-size:15px; flex-shrink:0; }
+  .panel-head h3{ font-family:'Architects Daughter', cursive; font-size:16px; margin:0; text-decoration:underline; text-decoration-color:var(--acc); }
+  .panel ul.notes, .panel ol.notes{ margin:0; padding-left:18px; font-size:13.5px; line-height:1.55; }
+  .panel ul.notes li, .panel ol.notes li{ margin-bottom:3px; }
+
+  .minitable{ width:100%; border-collapse:collapse; font-size:13.5px; margin:6px 0; }
+  .minitable th{ background:var(--ink); color:#fff; padding:5px 9px; text-align:left; font-weight:700; }
+  .minitable td{ padding:5px 9px; border-bottom:1px solid #e3e3e3; text-align:left; }
+  .minitable td.rowhead{ font-weight:700; color:var(--acc); text-align:left; background:var(--acc-lt); }
+
+  .ipotable{ width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0; }
+  .ipotable th{ background:var(--ink); color:#fff; padding:7px 10px; text-align:left; width:110px; vertical-align:top; }
+  .ipotable td{ padding:7px 10px; border-bottom:1px solid #e3e3e3; text-align:left; }
+
+  .linktable{ width:100%; border-collapse:collapse; font-size:13px; margin:10px 0; }
+  .linktable th{ background:var(--ink); color:#fff; padding:5px 9px; text-align:left; font-weight:700; }
+  .linktable td{ padding:5px 9px; border-bottom:1px solid #e3e3e3; }
+
+  .tracetable{ width:100%; border-collapse:collapse; font-size:12.5px; margin:10px 0; }
+  .tracetable th{ background:var(--ink); color:#fff; padding:5px 8px; text-align:left; font-weight:700; }
+  .tracetable td{ padding:5px 8px; border-bottom:1px solid #e3e3e3; text-align:left; vertical-align:top; }
+  .tracetable td.step{ font-weight:700; color:var(--acc); width:26px; }
+
+  .qa-card{ border:1.5px solid var(--card-border); border-radius:12px; background:#fff; padding:12px 14px; margin-bottom:12px; }
+  .qa-card .q{ font-weight:700; font-size:14px; margin-bottom:6px; }
+  .qa-card .a{ font-size:13.5px; background:var(--acc-lt); border-radius:8px; padding:7px 10px; color:var(--ink); }
+  .qa-card .a b{ color:var(--acc); }
+
+  .bottom-row{ display:flex; gap:20px; margin-top:6px; }
+  .what-box{ border:2.5px solid var(--green); border-radius:14px; background:#fff; padding:14px 18px; flex:1; }
+  .what-box h2{ font-family:'Architects Daughter', cursive; font-size:18px; margin:0 0 8px 0; color:var(--green); text-decoration:underline; }
+  .what-box ol, .what-box ul{ margin:0; padding-left:20px; font-size:14px; line-height:1.6; }
+  .takeaway-box{ border:2.5px solid var(--purple); border-radius:14px; background:#fff; padding:14px 18px; flex:1; }
+  .takeaway-box h2{ font-family:'Architects Daughter', cursive; font-size:18px; margin:0 0 8px 0; color:var(--purple); text-decoration:underline; }
+  .takeaway-box ul{ margin:0; padding-left:20px; font-size:14px; line-height:1.6; }
+
+  /* ---------- array visualization ---------- */
+  .sort-wrap{ display:flex; flex-direction:column; align-items:center; margin:16px 0; }
+  .sort-row{ display:flex; }
+  .sort-cell{ width:68px; height:68px; border:2px solid var(--pill-border); display:flex; align-items:center; justify-content:center;
+    font-family:'Consolas','Courier New',monospace; font-weight:700; font-size:20px; background:var(--pill); margin-left:-2px; color:var(--ink); }
+  .sort-cell:first-child{ margin-left:0; }
+  .sort-cell.compare{ background:var(--new-lt); border-color:var(--new); border-width:3px; }
+  .sort-cell.nswap{ background:var(--acc-lt); border-color:var(--acc); border-width:3px; }
+  .sort-cell.sorted{ background:var(--green-lt); border-color:var(--green); color:var(--green); }
+  .idx-row2{ display:flex; margin-top:4px; }
+  .idx-cell2{ width:68px; margin-left:-2px; text-align:center; font-size:11px; color:var(--grey); }
+  .idx-cell2:first-child{ margin-left:0; }
+  .swap-arrow{ text-align:center; font-size:22px; color:var(--new); margin-top:2px; height:22px; }
+
+  .ctr-row{ display:flex; gap:14px; margin:14px 0; justify-content:center; }
+  .ctr-box{ border:2.5px dashed var(--purple); border-radius:10px; padding:8px 16px; font-family:'Consolas','Courier New',monospace; font-weight:700; color:var(--purple); background:var(--purple-lt); font-size:14px; }
+  .ctr-box .clab{ font-family:'Kalam', cursive; font-weight:400; font-size:11px; color:var(--grey); display:block; margin-bottom:2px; }
+  .ctr-box.flash{ outline:3px solid var(--new); border-color:var(--new); background:var(--new-lt); color:var(--ink); }
+
+  .legend{ display:flex; gap:18px; justify-content:center; margin:6px 0 0 0; font-size:12px; color:var(--grey); }
+  .legend .sw{ display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:5px; vertical-align:-2px; border:2px solid; }
+  .legend .sw.c{ background:var(--new-lt); border-color:var(--new); }
+  .legend .sw.n{ background:var(--acc-lt); border-color:var(--acc); }
+  .legend .sw.s{ background:var(--green-lt); border-color:var(--green); }
+
+  .draft-banner{ background:var(--new-lt); border:1.5px dashed var(--new); border-radius:10px; padding:8px 14px; font-size:12.5px; color:var(--ink); margin-bottom:14px; }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <h1>Board 1 — Bubble Sort</h1>
+    <p>Putting a list in order, one neighbor-swap at a time</p>
+  </header>
+
+  <div class="app-shell">
+    <nav class="rail">
+      <div class="rail-item" data-step="0"><span class="n">0</span>Roadmap</div>
+      <div class="rail-item" data-step="1"><span class="n">1</span>The Problem</div>
+      <div class="rail-item" data-step="2"><span class="n">2</span>How Do We Solve This By Hand?</div>
+      <div class="rail-item" data-step="3"><span class="n">3</span>IPO</div>
+      <div class="rail-item" data-step="4"><span class="n">4</span>Pass 1: Setup</div>
+      <div class="rail-item" data-step="5"><span class="n">5</span>Pass 1: Compare 1</div>
+      <div class="rail-item" data-step="6"><span class="n">6</span>Pass 1: Compare 2</div>
+      <div class="rail-item" data-step="7"><span class="n">7</span>Pass 1: Compare 3</div>
+      <div class="rail-item" data-step="8"><span class="n">8</span>Pass 1: Compare 4</div>
+      <div class="rail-item" data-step="9"><span class="n">9</span>Pass 1: Complete</div>
+      <div class="rail-item" data-step="10"><span class="n">10</span>Pass 2: Compare 1</div>
+      <div class="rail-item" data-step="11"><span class="n">11</span>Pass 2: Compare 2</div>
+      <div class="rail-item" data-step="12"><span class="n">12</span>Pass 2: Compare 3</div>
+      <div class="rail-item" data-step="13"><span class="n">13</span>Pass 2: Complete</div>
+      <div class="rail-item" data-step="14"><span class="n">14</span>Pass 3: Compare 1</div>
+      <div class="rail-item" data-step="15"><span class="n">15</span>Pass 3: Compare 2</div>
+      <div class="rail-item" data-step="16"><span class="n">16</span>Pass 3: Complete — Stop Early</div>
+      <div class="rail-item" data-step="17"><span class="n">17</span>Why Stop Early?</div>
+      <div class="rail-item" data-step="18"><span class="n">18</span>Complexity</div>
+      <div class="rail-item" data-step="19"><span class="n">19</span>Judgment Call</div>
+      <div class="rail-item" data-step="20"><span class="n">20</span>Check Your Understanding</div>
+      <div class="rail-item" data-step="21"><span class="n">21</span>Key Takeaways</div>
+    </nav>
+
+    <main class="stage">
+
+      <!-- SLIDE 0 -->
+      <section class="slide">
+        <h2 class="slide-title">Board 1 — Roadmap</h2>
+        <p class="slide-sub">A first draft — flag anything you'd change before we lock this in</p>
+        <div class="draft-banner">DRAFT — first pass at the Bubble Sort board, same click-through style as the Graphs boards. Let me know what to adjust.</div>
+        <div class="panel" style="display:block;">
+          <table class="minitable">
+            <tr><th>Step</th><th>What we cover</th></tr>
+            <tr><td class="rowhead">1–3</td><td>The problem, how we'd solve it by hand, and the IPO</td></tr>
+            <tr><td class="rowhead">4–16</td><td>A full trace, pass by pass, comparison by comparison, including the early stop</td></tr>
+            <tr><td class="rowhead">17</td><td>Why the early stop works (the swapped flag)</td></tr>
+            <tr><td class="rowhead">18–19</td><td>Complexity, and when Bubble Sort is actually a reasonable choice</td></tr>
+            <tr><td class="rowhead">20–21</td><td>Check your understanding, then key takeaways</td></tr>
+          </table>
+          <p style="font-size:13px; margin-top:8px;">One example carries through the whole board: the list <b>[5, 1, 4, 2, 8]</b>, sorted into ascending order.</p>
+        </div>
+      </section>
+
+      <!-- SLIDE 1 -->
+      <section class="slide">
+        <h2 class="slide-title">1 — The Problem</h2>
+        <p class="slide-sub">A list in no particular order — we want it rearranged, smallest to largest</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">5</div><div class="sort-cell">1</div><div class="sort-cell">4</div><div class="sort-cell">2</div><div class="sort-cell">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-head"><div class="num">a</div><h3>What We Have</h3></div>
+            <ul class="notes">
+              <li>A list of n numbers, in whatever order they happened to arrive in.</li>
+              <li>We're not allowed to just look at them and retype them in order — we need a method that works for a list of any size, that we could hand to a computer.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="num">b</div><h3>What We Want</h3></div>
+            <ul class="notes">
+              <li>The exact same numbers, rearranged in place, smallest to largest.</li>
+              <li><b>Real-world example:</b> a leaderboard of scores, a class roster sorted by GPA, a list of prices sorted low to high. Same problem, different numbers.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2 -->
+      <section class="slide">
+        <h2 class="slide-title">2 — How Do We Solve This By Hand?</h2>
+        <p class="slide-sub">The general idea, before any code or formal trace</p>
+        <div class="panel" style="margin-bottom:14px;">
+          <ul class="notes">
+            <li>Look at the first two numbers. If the left one is bigger than the right one, they're out of order — swap them.</li>
+            <li>Move one step to the right and do the same thing with the next pair. Keep going all the way to the end of the list — that's one <b>pass</b>.</li>
+            <li>Here's the payoff: by the time one pass finishes, the single largest number is guaranteed to have "bubbled" all the way down to the end. It never has to move again.</li>
+            <li>So the next pass only needs to go up to the second-to-last spot — the end is already settled. Keep making passes, each one slightly shorter than the last.</li>
+            <li>Stop when an entire pass happens with no swaps at all — that means nothing is out of order anymore.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="num">?</div><h3>The General Questions</h3></div>
+          <ul class="notes">
+            <li><b>What do we compare?</b> Each pair of side-by-side neighbors, left to right.</li>
+            <li><b>When do we swap?</b> When the left value is bigger than the right value.</li>
+            <li><b>When does one pass end?</b> When we reach the last pair in the unsorted portion.</li>
+            <li><b>When do we stop completely?</b> When a whole pass happens with zero swaps.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 3 -->
+      <section class="slide">
+        <h2 class="slide-title">3 — IPO</h2>
+        <p class="slide-sub">Turning the by-hand idea into Input / Process / Output</p>
+        <table class="ipotable">
+          <tr><th>Input</th><td>An unsorted list of n numbers.</td></tr>
+          <tr><th>Process</th><td>Repeatedly compare each pair of neighbors, left to right, swapping whenever the left value is bigger. One full left-to-right sweep is a "pass." After each pass, one more number at the end is guaranteed sorted, so the next pass is one step shorter. Stop as soon as a full pass makes zero swaps.</td></tr>
+          <tr><th>Output</th><td>The same n numbers, rearranged in ascending order, in place.</td></tr>
+        </table>
+      </section>
+
+      <!-- SLIDE 4 -->
+      <section class="slide">
+        <h2 class="slide-title">4 — Pass 1: Setup</h2>
+        <p class="slide-sub">Starting list. Nothing has been compared yet.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell compare">5</div><div class="sort-cell compare">1</div><div class="sort-cell">4</div><div class="sort-cell">2</div><div class="sort-cell">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box"><span class="clab">Comparisons so far</span>0</div>
+          <div class="ctr-box"><span class="clab">Swaps so far</span>0</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>We start at the very left: positions 0 and 1 (highlighted) are the first pair we'll compare.</li>
+            <li>None of the five positions are "locked in" yet — the whole list is still up for grabs.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 5 -->
+      <section class="slide">
+        <h2 class="slide-title">5 — Pass 1, Compare 1</h2>
+        <p class="slide-sub">Compare positions 0 and 1: is 5 bigger than 1? Yes — swap.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell compare">1</div><div class="sort-cell compare">5</div><div class="sort-cell">4</div><div class="sort-cell">2</div><div class="sort-cell">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>1</div>
+          <div class="ctr-box flash"><span class="clab">Swaps so far</span>1</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>5 &gt; 1, so they're out of order. Swap them: the list is now [1, 5, 4, 2, 8].</li>
+            <li>Next up: positions 1 and 2.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 6 -->
+      <section class="slide">
+        <h2 class="slide-title">6 — Pass 1, Compare 2</h2>
+        <p class="slide-sub">Compare positions 1 and 2: is 5 bigger than 4? Yes — swap.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell compare">4</div><div class="sort-cell compare">5</div><div class="sort-cell">2</div><div class="sort-cell">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>2</div>
+          <div class="ctr-box flash"><span class="clab">Swaps so far</span>2</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>5 &gt; 4, so swap them: the list is now [1, 4, 5, 2, 8].</li>
+            <li>Notice 5 is "bubbling" rightward — it keeps winning its comparisons and moving on.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 7 -->
+      <section class="slide">
+        <h2 class="slide-title">7 — Pass 1, Compare 3</h2>
+        <p class="slide-sub">Compare positions 2 and 3: is 5 bigger than 2? Yes — swap.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell">4</div><div class="sort-cell compare">2</div><div class="sort-cell compare">5</div><div class="sort-cell">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>3</div>
+          <div class="ctr-box flash"><span class="clab">Swaps so far</span>3</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>5 &gt; 2, so swap them: the list is now [1, 4, 2, 5, 8].</li>
+            <li>One pair left in this pass: positions 3 and 4.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 8 -->
+      <section class="slide">
+        <h2 class="slide-title">8 — Pass 1, Compare 4</h2>
+        <p class="slide-sub">Compare positions 3 and 4: is 5 bigger than 8? No — leave them.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell">4</div><div class="sort-cell">2</div><div class="sort-cell nswap">5</div><div class="sort-cell nswap">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>4</div>
+          <div class="ctr-box"><span class="clab">Swaps so far</span>3</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>5 is NOT bigger than 8, so they're already in order — no swap this time.</li>
+            <li>That was the last pair in Pass 1. List is now [1, 4, 2, 5, 8].</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 9 -->
+      <section class="slide">
+        <h2 class="slide-title">9 — Pass 1: Complete</h2>
+        <p class="slide-sub">8 has bubbled all the way to the end — it's locked in for good.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell">4</div><div class="sort-cell">2</div><div class="sort-cell">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="legend">
+          <span><span class="sw c"></span>swapped</span>
+          <span><span class="sw n"></span>compared, no swap</span>
+          <span><span class="sw s"></span>locked in (sorted)</span>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <ul class="notes">
+            <li>4 comparisons, 3 swaps. The largest value in the whole list (8) is now in its final position — it will never move again.</li>
+            <li>Pass 2 only needs to check positions 0 through 3. Position 4 is done.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 10 -->
+      <section class="slide">
+        <h2 class="slide-title">10 — Pass 2, Compare 1</h2>
+        <p class="slide-sub">Compare positions 0 and 1: is 1 bigger than 4? No — leave them.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell nswap">1</div><div class="sort-cell nswap">4</div><div class="sort-cell">2</div><div class="sort-cell">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>5</div>
+          <div class="ctr-box"><span class="clab">Swaps so far</span>3</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>1 &lt; 4, already in order — no swap.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 11 -->
+      <section class="slide">
+        <h2 class="slide-title">11 — Pass 2, Compare 2</h2>
+        <p class="slide-sub">Compare positions 1 and 2: is 4 bigger than 2? Yes — swap.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell compare">2</div><div class="sort-cell compare">4</div><div class="sort-cell">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>6</div>
+          <div class="ctr-box flash"><span class="clab">Swaps so far</span>4</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>4 &gt; 2, so swap them: the list is now [1, 2, 4, 5, 8].</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 12 -->
+      <section class="slide">
+        <h2 class="slide-title">12 — Pass 2, Compare 3</h2>
+        <p class="slide-sub">Compare positions 2 and 3: is 4 bigger than 5? No — leave them.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell">2</div><div class="sort-cell nswap">4</div><div class="sort-cell nswap">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>7</div>
+          <div class="ctr-box"><span class="clab">Swaps so far</span>4</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>4 &lt; 5, already in order — no swap. That's the last pair in Pass 2.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 13 -->
+      <section class="slide">
+        <h2 class="slide-title">13 — Pass 2: Complete</h2>
+        <p class="slide-sub">5 is now locked in too — two positions settled.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell">2</div><div class="sort-cell">4</div><div class="sort-cell sorted">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <ul class="notes">
+            <li>3 comparisons, 1 swap this pass. Position 3 (value 5) is now settled, joining position 4.</li>
+            <li>Pass 3 only needs to check positions 0 through 2.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 14 -->
+      <section class="slide">
+        <h2 class="slide-title">14 — Pass 3, Compare 1</h2>
+        <p class="slide-sub">Compare positions 0 and 1: is 1 bigger than 2? No — leave them.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell nswap">1</div><div class="sort-cell nswap">2</div><div class="sort-cell">4</div><div class="sort-cell sorted">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>8</div>
+          <div class="ctr-box"><span class="clab">Swaps so far</span>4</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>1 &lt; 2, already in order — no swap.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 15 -->
+      <section class="slide">
+        <h2 class="slide-title">15 — Pass 3, Compare 2</h2>
+        <p class="slide-sub">Compare positions 1 and 2: is 2 bigger than 4? No — leave them.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell">1</div><div class="sort-cell nswap">2</div><div class="sort-cell nswap">4</div><div class="sort-cell sorted">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box flash"><span class="clab">Comparisons so far</span>9</div>
+          <div class="ctr-box"><span class="clab">Swaps so far</span>4</div>
+        </div>
+        <div class="panel">
+          <ul class="notes">
+            <li>2 &lt; 4, already in order — no swap. That's the last pair in Pass 3.</li>
+            <li>Zero swaps happened in this entire pass — watch what that means on the next slide.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 16 -->
+      <section class="slide">
+        <h2 class="slide-title">16 — Pass 3: Complete — Zero Swaps, Stop Early</h2>
+        <p class="slide-sub">A whole pass with no swaps means everything left is already in order.</p>
+        <div class="sort-wrap">
+          <div class="sort-row">
+            <div class="sort-cell sorted">1</div><div class="sort-cell sorted">2</div><div class="sort-cell sorted">4</div><div class="sort-cell sorted">5</div><div class="sort-cell sorted">8</div>
+          </div>
+          <div class="idx-row2"><div class="idx-cell2">0</div><div class="idx-cell2">1</div><div class="idx-cell2">2</div><div class="idx-cell2">3</div><div class="idx-cell2">4</div></div>
+        </div>
+        <div class="ctr-row">
+          <div class="ctr-box"><span class="clab">Total comparisons</span>9</div>
+          <div class="ctr-box"><span class="clab">Total swaps</span>4</div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <ul class="notes">
+            <li>We STOP here. Without the early-exit rule, a 5-element list normally needs 4 full passes (n − 1) — but Pass 3 proved nothing is left to fix, so Pass 4 is skipped entirely.</li>
+            <li>Sorted result: <b>[1, 2, 4, 5, 8]</b>.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 17 -->
+      <section class="slide">
+        <h2 class="slide-title">17 — Why Stop Early?</h2>
+        <p class="slide-sub">A one-flag trick that turns a wasted pass into an early finish</p>
+        <div class="panel">
+          <ul class="notes">
+            <li>Before each pass starts, set a flag: <b>swapped = false</b>.</li>
+            <li>Any time a swap actually happens during the pass, set <b>swapped = true</b>.</li>
+            <li>When the pass finishes, check the flag. If swapped is still false, nothing moved this whole pass — the list is already sorted. Stop immediately, even if passes are technically still "left."</li>
+            <li>That's exactly what happened in Pass 3: zero swaps, flag stayed false, so we skipped Pass 4 entirely.</li>
+          </ul>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <ul class="notes">
+            <li><b>Real-world example:</b> if a mostly-sorted list gets one new item added at the end, Bubble Sort with this flag can re-sort it in close to one pass — it doesn't blindly redo all the work.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 18 -->
+      <section class="slide">
+        <h2 class="slide-title">18 — Complexity</h2>
+        <p class="slide-sub">How much work, and why</p>
+        <table class="minitable">
+          <tr><th>Case</th><th>Time</th><th>Why</th></tr>
+          <tr><td class="rowhead">Best</td><td>O(n)</td><td>the list is already sorted — one pass, zero swaps, the early-exit flag stops everything immediately</td></tr>
+          <tr><td class="rowhead">Average</td><td>O(n&sup2;)</td><td>a typical shuffled list needs roughly n passes, each checking roughly n items</td></tr>
+          <tr><td class="rowhead">Worst</td><td>O(n&sup2;)</td><td>the list is in reverse order — every single pass makes the maximum number of swaps</td></tr>
+        </table>
+        <div class="panel" style="margin-top:14px;">
+          <ul class="notes">
+            <li>Comparisons happen whether or not a swap occurs — in our example, 9 comparisons but only 4 swaps.</li>
+            <li>Extra space is O(1): we only ever need room for one extra value while swapping a pair — nothing scales with n.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SLIDE 19 -->
+      <section class="slide">
+        <h2 class="slide-title">19 — Judgment Call: When Does Bubble Sort Make Sense?</h2>
+        <p class="slide-sub">O(n&sup2;) sounds bad — so why learn it at all?</p>
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-head"><div class="num">+</div><h3>Reasonable to Use</h3></div>
+            <ul class="notes">
+              <li>Very small lists, where the overhead of a fancier algorithm isn't worth it.</li>
+              <li>Nearly-sorted data — the early-exit flag makes this close to O(n) in practice.</li>
+              <li>Teaching: it's the simplest possible sorting algorithm to trace by hand, which is exactly why it's first.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="num">&minus;</div><h3>Poor Fit</h3></div>
+            <ul class="notes">
+              <li>Large, randomly-ordered lists — O(n&sup2;) gets slow fast as n grows.</li>
+              <li>Anywhere performance actually matters in production code — later topics (Selection, Quick, Merge, Heap Sort) all beat it on large data.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 20 -->
+      <section class="slide">
+        <h2 class="slide-title">20 — Check Your Understanding</h2>
+        <p class="slide-sub">Answer each one yourself before reading the answer box.</p>
+        <div class="qa-card">
+          <div class="q">Q1. In the list [1, 4, 2, 5, 8], comparing positions 1 and 2 means comparing which two values?</div>
+          <div class="a"><b>Answer:</b> 4 and 2 — the values currently stored at those positions.</div>
+        </div>
+        <div class="qa-card">
+          <div class="q">Q2. After Pass 1 finishes, which position is guaranteed to hold its final, correct value?</div>
+          <div class="a"><b>Answer:</b> The last position in the unsorted portion — the single largest remaining value always bubbles all the way to the end of a pass.</div>
+        </div>
+        <div class="qa-card">
+          <div class="q">Q3. True or False: with the early-exit optimization, Bubble Sort always runs all n − 1 passes.</div>
+          <div class="a"><b>Answer:</b> False. It stops as soon as one full pass makes zero swaps — exactly what happened after Pass 3 in our trace, skipping Pass 4.</div>
+        </div>
+        <div class="qa-card">
+          <div class="q">Q4. What is the best-case time complexity of Bubble Sort (with the flag), and when does it happen?</div>
+          <div class="a"><b>Answer:</b> O(n) — when the list is already sorted, the very first pass makes zero swaps and the algorithm stops immediately.</div>
+        </div>
+      </section>
+
+      <!-- SLIDE 21 -->
+      <section class="slide">
+        <h2 class="slide-title">21 — Key Takeaways</h2>
+        <p class="slide-sub">Carrying this into Selection Sort next</p>
+        <div class="bottom-row">
+          <div class="what-box">
+            <h2>What We Covered</h2>
+            <ol>
+              <li>Bubble Sort repeatedly compares neighbors and swaps when the left is bigger than the right.</li>
+              <li>Each full pass bubbles the largest remaining value all the way to the end — so each pass can be one step shorter than the last.</li>
+              <li>A "swapped" flag lets the algorithm stop the moment a pass makes zero swaps, instead of grinding through every remaining pass.</li>
+              <li>Time complexity is O(n&sup2;) in the average and worst case, but O(n) best case with the early-exit flag. Extra space is O(1).</li>
+            </ol>
+          </div>
+          <div class="takeaway-box">
+            <h2>Carrying Forward</h2>
+            <ul>
+              <li>Next up: Selection Sort — same goal, different strategy (find the smallest remaining value and place it directly, instead of bubbling through swaps).</li>
+              <li>Same running example array will carry over, so the two algorithms can be compared directly on identical input.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="navbar">
+    <button class="nav-btn" id="prevBtn">← Back</button>
+    <span class="step-indicator" id="stepIndicator">1 / 22</span>
+    <button class="nav-btn primary" id="nextBtn">Next →</button>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const railItems = document.querySelectorAll('.rail-item');
+  const stage = document.querySelector('.stage');
+  let cur = 0;
+  function show(i){
+    if(i<0) i=0; if(i>=slides.length) i=slides.length-1;
+    slides.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+    railItems.forEach((r,idx)=> r.classList.toggle('active', idx===i));
+    document.getElementById('stepIndicator').textContent = (i+1) + ' / ' + slides.length;
+    document.getElementById('prevBtn').disabled = i===0;
+    document.getElementById('nextBtn').disabled = i===slides.length-1;
+    stage.scrollTop = 0;
+    cur = i;
+  }
+  document.getElementById('nextBtn').addEventListener('click', ()=>show(cur+1));
+  document.getElementById('prevBtn').addEventListener('click', ()=>show(cur-1));
+  railItems.forEach((r,idx)=> r.addEventListener('click', ()=>show(idx)));
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowRight' || e.key==='PageDown' || e.key===' '){ show(cur+1); e.preventDefault(); }
+    if(e.key==='ArrowLeft' || e.key==='PageUp'){ show(cur-1); e.preventDefault(); }
+  });
+  show(0);
+</script>
+</body>
+</html>
